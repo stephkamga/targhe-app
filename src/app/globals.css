@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+  }
+
+  * {
+    @apply border-slate-700;
+  }
+
+  body {
+    @apply bg-slate-950 text-slate-100;
+    background-image: 
+      radial-gradient(ellipse at 20% 50%, rgba(14, 165, 233, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+    min-height: 100dvh;
+  }
+
+  /* Scrollbar personalizzata */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-500;
+  }
+}
+
+@layer components {
+  /* Card glassmorphism */
+  .glass-card {
+    @apply bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl;
+  }
+
+  /* Bottone primario */
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-400 active:bg-brand-600 
+           text-white font-semibold rounded-xl px-6 py-3
+           transition-all duration-200 
+           shadow-lg shadow-brand-500/25
+           disabled:opacity-50 disabled:cursor-not-allowed
+           flex items-center justify-center gap-2;
+  }
+
+  /* Bottone secondario */
+  .btn-secondary {
+    @apply bg-slate-700/50 hover:bg-slate-700 active:bg-slate-600
+           text-slate-200 font-medium rounded-xl px-6 py-3
+           border border-slate-600/50
+           transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed
+           flex items-center justify-center gap-2;
+  }
+
+  /* Input */
+  .input-field {
+    @apply w-full bg-slate-800/50 border border-slate-700/50 
+           text-slate-100 placeholder-slate-500
+           rounded-xl px-4 py-3
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50
+           transition-all duration-200;
+  }
+
+  /* Badge targa */
+  .plate-badge {
+    @apply font-mono font-bold tracking-widest text-lg
+           bg-yellow-400 text-slate-900
+           px-4 py-1.5 rounded-lg
+           border-2 border-slate-900
+           shadow-md;
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    @apply bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800
+           bg-[length:200%_100%]
+           animate-shimmer;
+  }
+}
+
+@layer utilities {
+  /* Safe area per mobile */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Testo gradiente */
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-400 to-violet-400 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent;
+  }
+}

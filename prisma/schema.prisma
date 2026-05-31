@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  plates        Plate[]
+  badges        Badge[]
+  dailyWins     DailyWin[]
+
+  @@map("users")
+}
+
+model Plate {
+  id          String   @id @default(cuid())
+  plateNumber String
+  photoUrl    String
+  carYear     Int?     // Anno stimato dell'auto
+  notes       String?
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("plates")
+}
+
+model DailyWin {
+  id          String   @id @default(cuid())
+  date        DateTime @db.Date
+  plateNumber String
+  carYear     Int
+  photoUrl    String
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([date])
+  @@map("daily_wins")
+}
+
+model Badge {
+  id          String    @id @default(cuid())
+  type        BadgeType
+  earnedAt    DateTime  @default(now())
+  description String?
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("badges")
+}
+
+enum BadgeType {
+  FIRST_PLATE       // Prima targa inserita
+  DAILY_WINNER      // Vincitore giornaliero
+  STREAK_3          // 3 giorni consecutivi di vittoria
+  STREAK_7          // 7 giorni consecutivi
+  VINTAGE_HUNTER    // Trovato auto ante 1980
+  CENTURY_HUNTER    // Trovato auto ante 2000
+  COLLECTOR         // 50 targhe totali inserite
+}
