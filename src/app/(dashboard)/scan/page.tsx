@@ -115,7 +115,7 @@ export default function ScanPage() {
         </Link>
         <h1 className="font-semibold text-white">{t.scan.title}</h1>
         {remaining !== null && (
-          <div className="glass-card px-2.5 py-1 text-xs font-medium text-brand-400">{remaining} {t.scan.remaining}</div>
+          <div className="glass-card px-2.5 py-1 text-xs font-medium text-brand-400">{remaining} {t.scan.remainingLeft}</div>
         )}
       </div>
 

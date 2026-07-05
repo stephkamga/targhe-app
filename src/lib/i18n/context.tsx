@@ -1,11 +1,11 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { translations, Locale, Translations } from "./translations";
+import { translations, Locale } from "./translations";
 
 interface I18nContextType {
   locale: Locale;
-  t: Translations;
+  t: typeof translations[Locale];
   setLocale: (locale: Locale) => void;
   availableLocales: { code: Locale; label: string; flag: string }[];
 }

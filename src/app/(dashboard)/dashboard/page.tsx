@@ -114,7 +114,7 @@ export default function DashboardPage() {
         {(todayData?.remaining ?? 3) > 0 ? (
           <Link href="/scan" className="btn-primary w-full text-sm py-2.5">
             <Camera className="w-4 h-4" />
-            {t.dashboard.scanCta} ({todayData?.remaining ?? 3} {t.dashboard.remaining})
+            {t.dashboard.scanCta} ({todayData?.remaining ?? 3} {t.dashboard.remainingLeft})
           </Link>
         ) : (
           <div className="text-center py-2 text-slate-400 text-sm">{t.dashboard.allUsed}</div>
