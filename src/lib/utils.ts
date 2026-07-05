@@ -47,30 +47,79 @@ export function estimateCarYearFromPlate(plate: string): number | null {
 }
 
 /**
- * Stima l'anno per targhe nel formato moderno (AA 000 AA)
- * La progressione inizia da AA 000 AA nel 1994.
+ * Stima l'anno per targhe nel formato moderno (AA 000 AA).
  *
- * In Italia vengono emesse circa 1.500 combinazioni prefisso/anno.
- * L'alfabeto usato è 22 lettere (senza I, O, Q, U) → 22² = 484 prefissi totali.
- * Il suffisso cambia più velocemente: ogni prefisso copre ~1000 targhe (000-999).
- * Stima: il prefisso avanza di ~1 ogni 6-7 mesi → ~2 prefissi/anno.
+ * Lookup table calibrata su anchor point reali (fonte: praticheauto.online, ACI):
+ *   FJ (index 118) → 2017
+ *   GF (index 137) → 2021
+ *   GV (index 150) → 2023/2024
+ *
+ * Alfabeto: ABCDEFGHJKLMNPRSTUVWXYZ (23 lettere, senza I, O, Q, U)
+ * Indice prefisso: AA=0, AB=1 ... ZZ=528
  */
-function estimateYearFromModernPlate(prefix: string, suffix: string): number {
-  const ALPHABET = "ABCDEFGHJKLMNPRSTUVWXYZ"; // 22 lettere, senza I, O, Q, U
+function estimateYearFromModernPlate(prefix: string, _suffix: string): number {
+  const ALPHABET = "ABCDEFGHJKLMNPRSTUVWXYZ"; // 23 lettere
+  const N = ALPHABET.length; // 23
 
   const p1 = ALPHABET.indexOf(prefix[0]);
   const p2 = ALPHABET.indexOf(prefix[1]);
 
   if (p1 === -1 || p2 === -1) return 1994;
 
-  // Indice del prefisso (0 = AA, 1 = AB, ..., 483 = ZZ)
-  const prefixIndex = p1 * ALPHABET.length + p2;
+  const prefixIndex = p1 * N + p2;
 
-  // In Italia dal 1994 al 2024 (30 anni) sono stati emessi ~484 prefissi
-  // → circa 16 prefissi/anno in media
-  const yearsFromStart = prefixIndex / 16;
+  // Lookup table [anno, indice prefisso iniziale]
+  // Anchor reali verificati (alfabeto 23 lettere, N=23):
+  //   FJ = F(5)*23 + J(8) = 123 → 2017
+  //   GF = G(6)*23 + F(5) = 143 → 2021
+  //   GV = G(6)*23 + V(19) = 156 → 2023
+  const YEAR_TABLE: [number, number][] = [
+    [1994,   0],
+    [1995,   5],
+    [1996,  11],
+    [1997,  16],
+    [1998,  22],
+    [1999,  28],
+    [2000,  34],
+    [2001,  40],
+    [2002,  46],
+    [2003,  52],
+    [2004,  58],
+    [2005,  64],
+    [2006,  70],
+    [2007,  76],
+    [2008,  82],
+    [2009,  88],
+    [2010,  94],
+    [2011, 100],
+    [2012, 106],
+    [2013, 110],
+    [2014, 114],
+    [2015, 118],
+    [2016, 121],
+    [2017, 123],  // ✅ FJ=123 verificato
+    [2018, 128],
+    [2019, 133],
+    [2020, 138],  // COVID
+    [2021, 143],  // ✅ GF=143 verificato
+    [2022, 150],
+    [2023, 156],  // ✅ GV=156 verificato
+    [2024, 162],
+    [2025, 168],
+    [2026, 174],
+  ];
 
-  return Math.min(new Date().getFullYear(), Math.round(1994 + yearsFromStart));
+  for (let i = 0; i < YEAR_TABLE.length - 1; i++) {
+    const [year, startIdx] = YEAR_TABLE[i];
+    const [nextYear, nextIdx] = YEAR_TABLE[i + 1];
+
+    if (prefixIndex >= startIdx && prefixIndex < nextIdx) {
+      const fraction = (prefixIndex - startIdx) / (nextIdx - startIdx);
+      return Math.round(year + fraction * (nextYear - year));
+    }
+  }
+
+  return YEAR_TABLE[YEAR_TABLE.length - 1][0];
 }
 
 /**
