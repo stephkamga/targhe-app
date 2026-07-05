@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// Public endpoint — no auth required, used on the landing page
+// Opt out of static rendering — this route needs a live DB connection
+export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const now = new Date();
