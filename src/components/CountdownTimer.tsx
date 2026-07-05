@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
+import { useI18n } from "@/lib/i18n/context";
 
 export function CountdownTimer() {
+  const { t } = useI18n();
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -11,13 +13,12 @@ export function CountdownTimer() {
       const now = new Date();
       const midnight = new Date();
       midnight.setHours(24, 0, 0, 0);
-      
       const diff = midnight.getTime() - now.getTime();
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
-      setTimeLeft({ hours, minutes, seconds });
+      setTimeLeft({
+        hours: Math.floor(diff / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      });
     };
 
     calculateTimeLeft();
@@ -26,7 +27,6 @@ export function CountdownTimer() {
   }, []);
 
   const pad = (n: number) => n.toString().padStart(2, "0");
-
   const urgency = timeLeft.hours < 2;
 
   return (
@@ -34,9 +34,7 @@ export function CountdownTimer() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className={`w-4 h-4 ${urgency ? "text-orange-400" : "text-brand-400"}`} />
-          <span className="text-sm font-medium text-slate-300">
-            Fine giornata tra
-          </span>
+          <span className="text-sm font-medium text-slate-300">{t.countdown.endOfDay}</span>
         </div>
         <div className="flex items-center gap-1 font-mono">
           {[
@@ -46,11 +44,7 @@ export function CountdownTimer() {
           ].map((unit, i) => (
             <span key={unit.label} className="flex items-center">
               {i > 0 && <span className="text-slate-600 mx-0.5">:</span>}
-              <span
-                className={`text-lg font-bold tabular-nums ${
-                  urgency ? "text-orange-400" : "text-white"
-                }`}
-              >
+              <span className={`text-lg font-bold tabular-nums ${urgency ? "text-orange-400" : "text-white"}`}>
                 {pad(unit.value)}
               </span>
               <span className="text-xs text-slate-500 ml-0.5">{unit.label}</span>
@@ -59,9 +53,7 @@ export function CountdownTimer() {
         </div>
       </div>
       {urgency && (
-        <p className="text-xs text-orange-400/80 mt-1.5">
-          ⚡ Meno di 2 ore al verdetto!
-        </p>
+        <p className="text-xs text-orange-400/80 mt-1.5">{t.countdown.urgent}</p>
       )}
     </div>
   );

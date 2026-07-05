@@ -5,16 +5,18 @@ import { usePathname } from "next/navigation";
 import { Home, Camera, Trophy, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-
-const navItems = [
-  { href: "/dashboard", icon: Home, label: "Home" },
-  { href: "/scan", icon: Camera, label: "Scansiona" },
-  { href: "/leaderboard", icon: Trophy, label: "Classifica" },
-  { href: "/profile", icon: User, label: "Profilo" },
-];
+import { useI18n } from "@/lib/i18n/context";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { t } = useI18n();
+
+  const navItems = [
+    { href: "/dashboard", icon: Home, label: t.nav.home },
+    { href: "/scan", icon: Camera, label: t.nav.scan },
+    { href: "/leaderboard", icon: Trophy, label: t.nav.leaderboard },
+    { href: "/profile", icon: User, label: t.nav.profile },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 pb-safe">
@@ -38,7 +40,6 @@ export function BottomNav() {
                   />
                 )}
 
-                {/* Icona speciale per Camera */}
                 {item.href === "/scan" ? (
                   <div
                     className={cn(
