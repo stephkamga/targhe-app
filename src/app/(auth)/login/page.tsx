@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -17,6 +17,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [monthly, setMonthly] = useState<{ leaderboard: { rank: number; userId: string; userName: string; wins: number }[]; month: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/leaderboard/public")
+      .then((r) => r.json())
+      .then(setMonthly)
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +133,80 @@ export default function LoginPage() {
             <Zap className="w-3 h-3 text-yellow-400" />
             {t.login.limit}
           </p>
+        </motion.div>
+
+        {/* ── MONTHLY LEADERBOARD ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.38 }}
+          className="glass-card p-4"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-yellow-400" />
+              {t.login.monthlyTitle}
+            </h3>
+            {monthly?.month && (
+              <span className="text-xs text-slate-500 capitalize">{monthly.month}</span>
+            )}
+          </div>
+
+          {!monthly ? (
+            // Loading skeleton
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-9 rounded-lg shimmer" />
+              ))}
+            </div>
+          ) : monthly.leaderboard.length === 0 ? (
+            <p className="text-xs text-slate-500 text-center py-3">{t.login.monthlyEmpty}</p>
+          ) : (
+            <div className="space-y-2">
+              {monthly.leaderboard.map((entry) => {
+                const rankEmoji = entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : null;
+                const isTop3 = entry.rank <= 3;
+                return (
+                  <div
+                    key={entry.userId}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl ${isTop3 ? "bg-slate-700/40" : ""}`}
+                  >
+                    {/* Rank */}
+                    <div className="w-6 text-center flex-shrink-0">
+                      {rankEmoji ? (
+                        <span className="text-base">{rankEmoji}</span>
+                      ) : (
+                        <span className="text-xs font-bold text-slate-500">{entry.rank}</span>
+                      )}
+                    </div>
+
+                    {/* Avatar initial */}
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                      entry.rank === 1 ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" :
+                      entry.rank === 2 ? "bg-slate-400/20 text-slate-300 border border-slate-400/30" :
+                      entry.rank === 3 ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" :
+                      "bg-slate-700 text-slate-400"
+                    }`}>
+                      {entry.userName[0]?.toUpperCase()}
+                    </div>
+
+                    {/* Name */}
+                    <p className={`flex-1 text-sm font-medium truncate ${entry.rank === 1 ? "text-yellow-300" : "text-slate-200"}`}>
+                      {entry.userName}
+                    </p>
+
+                    {/* Wins */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className={`text-sm font-bold ${entry.rank === 1 ? "text-yellow-400" : "text-slate-300"}`}>
+                        {entry.wins}
+                      </span>
+                      <span className="text-xs text-slate-500">{t.login.monthlyWins}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
         {/* ── PLATE EXAMPLE ── */}
