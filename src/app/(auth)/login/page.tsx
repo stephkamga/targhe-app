@@ -20,10 +20,16 @@ export default function LoginPage() {
   const [monthly, setMonthly] = useState<{ leaderboard: { rank: number; userId: string; userName: string; wins: number }[]; month: string } | null>(null);
 
   useEffect(() => {
-    fetch("/api/leaderboard/public")
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
+    fetch("/api/leaderboard/public", { signal: controller.signal })
       .then((r) => r.json())
       .then(setMonthly)
-      .catch(() => {});
+      .catch(() => setMonthly({ leaderboard: [], month: "" })) // show empty state on error/timeout
+      .finally(() => clearTimeout(timeout));
+
+    return () => controller.abort();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

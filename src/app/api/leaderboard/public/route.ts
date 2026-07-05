@@ -3,24 +3,32 @@ import { prisma } from "@/lib/prisma";
 
 // Opt out of static rendering — this route needs a live DB connection
 export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Top 5 winners this month
-    const winners = await prisma.dailyWin.groupBy({
+    // Race the DB query against a 4s timeout so the page never hangs
+    const winnersPromise = prisma.dailyWin.groupBy({
       by: ["userId"],
-      where: {
-        date: { gte: monthStart },
-      },
+      where: { date: { gte: monthStart } },
       _count: { id: true },
       orderBy: { _count: { id: "desc" } },
       take: 5,
     });
 
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("db_timeout")), 4000)
+    );
+
+    const winners = await Promise.race([winnersPromise, timeoutPromise]);
+
     if (winners.length === 0) {
-      return NextResponse.json({ leaderboard: [], month: now.toLocaleString("default", { month: "long", year: "numeric" }) });
+      return NextResponse.json({
+        leaderboard: [],
+        month: now.toLocaleString("default", { month: "long", year: "numeric" }),
+      });
     }
 
     const userIds = winners.map((w) => w.userId);
@@ -45,6 +53,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Public leaderboard error:", error);
+    // Always return valid JSON — never hang
     return NextResponse.json({ leaderboard: [], month: "" });
   }
 }
