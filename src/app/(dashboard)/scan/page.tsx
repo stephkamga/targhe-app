@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";import { Camera, X, Check, RotateCcw, AlertCircle, Zap, Car, ChevronLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Camera, X, Check, RotateCcw, AlertCircle, Zap, Car, ChevronLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { isValidItalianPlate, formatPlate, estimateCarYearFromPlate } from "@/lib/utils";
+import { recognizePlateFromCanvas } from "@/lib/ocr";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n/context";
 
 type Step = "camera" | "preview" | "plate-input" | "submitting" | "success";
+type OcrStatus = "idle" | "detecting" | "detected" | "not-detected";
 
 export default function ScanPage() {
   const { t } = useI18n();
@@ -23,6 +26,8 @@ export default function ScanPage() {
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
   const [remaining, setRemaining] = useState<number | null>(null);
   const [estimatedYear, setEstimatedYear] = useState<number | null>(null);
+  const [ocrStatus, setOcrStatus] = useState<OcrStatus>("idle");
+  const plateEditedRef = useRef(false);
 
   const startCamera = useCallback(async () => {
     try {
@@ -62,6 +67,19 @@ export default function ScanPage() {
     setCapturedPhoto(canvas.toDataURL("image/jpeg", 0.85));
     setStep("preview");
     if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+
+    plateEditedRef.current = false;
+    setOcrStatus("detecting");
+    recognizePlateFromCanvas(canvas)
+      .then((candidate) => {
+        if (candidate && !plateEditedRef.current) {
+          setPlateNumber(candidate);
+          setOcrStatus("detected");
+        } else {
+          setOcrStatus("not-detected");
+        }
+      })
+      .catch(() => setOcrStatus("not-detected"));
   }, []);
 
   useEffect(() => {
@@ -89,7 +107,15 @@ export default function ScanPage() {
     }
   };
 
-  const reset = () => { setCapturedPhoto(null); setPlateNumber(""); setNotes(""); setEstimatedYear(null); setStep("camera"); };
+  const reset = () => {
+    setCapturedPhoto(null);
+    setPlateNumber("");
+    setNotes("");
+    setEstimatedYear(null);
+    setOcrStatus("idle");
+    plateEditedRef.current = false;
+    setStep("camera");
+  };
 
   if (remaining === 0) {
     return (
@@ -236,11 +262,27 @@ export default function ScanPage() {
 
             {/* Plate input */}
             <div className="space-y-1.5 flex-shrink-0">
-              <label className="text-xs font-medium text-slate-400">{t.scan.plateLabel}</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-slate-400">{t.scan.plateLabel}</label>
+                {ocrStatus === "detecting" && (
+                  <span className="flex items-center gap-1.5 text-xs text-brand-400">
+                    <span className="w-3 h-3 border-2 border-brand-400/30 border-t-brand-400 rounded-full animate-spin" />
+                    {t.scan.ocrDetecting}
+                  </span>
+                )}
+                {ocrStatus === "detected" && (
+                  <span className="flex items-center gap-1 text-xs text-green-400">
+                    <Check className="w-3 h-3" />{t.scan.ocrDetected}
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 value={plateNumber}
-                onChange={(e) => setPlateNumber(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+                onChange={(e) => {
+                  plateEditedRef.current = true;
+                  setPlateNumber(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+                }}
                 placeholder="AB123CD"
                 className="input-field font-mono text-2xl text-center tracking-widest uppercase py-2"
                 maxLength={7}

@@ -23,6 +23,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Tesseract trained data (fetched at runtime from CDN)
+*.traineddata
+
 # local env files
 .env*.local
 .env
