@@ -4,20 +4,50 @@ let workerPromise: Promise<Worker> | null = null;
 
 async function getWorker(): Promise<Worker> {
   if (!workerPromise) {
-    workerPromise = createWorker("eng", 1, {
-      workerPath: "https://cdn.jsdelivr.net/npm/tesseract.js@7/dist/worker.min.js",
-      langPath: "https://tessdata.projectnaptha.com/4.0.0",
-      corePath: "https://cdn.jsdelivr.net/npm/tesseract.js-core@6/tesseract-core-simd-lstm.wasm.js",
-    }).then(async (worker) => {
+    workerPromise = (async () => {
+      // Detect SIMD support — mobile browsers often don't have it
+      const simdSupported = await checkSimdSupport();
+      console.log(`[OCR] SIMD support: ${simdSupported}`);
+
+      const corePath = simdSupported
+        ? "https://cdn.jsdelivr.net/npm/tesseract.js-core@6/tesseract-core-simd-lstm.wasm.js"
+        : "https://cdn.jsdelivr.net/npm/tesseract.js-core@6/tesseract-core-lstm.wasm.js"; // non-SIMD fallback
+
+      const worker = await createWorker("eng", 1, {
+        workerPath: "https://cdn.jsdelivr.net/npm/tesseract.js@7/dist/worker.min.js",
+        langPath: "https://tessdata.projectnaptha.com/4.0.0",
+        corePath,
+      });
+
       await worker.setParameters({
-        // Only allow valid plate characters
         tessedit_char_whitelist: "ABCDEFGHJKLMNPRSTUVWXYZ0123456789",
         tessedit_pageseg_mode: PSM.SINGLE_LINE,
       });
+      console.log("[OCR] Worker ready.");
       return worker;
-    });
+    })();
   }
   return workerPromise;
+}
+
+/**
+ * Detects WebAssembly SIMD support at runtime.
+ * Returns true on desktop Chrome/Firefox, often false on mobile Safari or older Android.
+ */
+async function checkSimdSupport(): Promise<boolean> {
+  try {
+    // Minimal WASM module that uses SIMD — if it validates, SIMD is supported
+    const simdBytes = new Uint8Array([
+      0x00, 0x61, 0x73, 0x6d, // magic
+      0x01, 0x00, 0x00, 0x00, // version
+      0x01, 0x05, 0x01,       // type section
+      0x60, 0x00, 0x01, 0x7b, // () -> v128
+    ]);
+    await WebAssembly.validate(simdBytes);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
