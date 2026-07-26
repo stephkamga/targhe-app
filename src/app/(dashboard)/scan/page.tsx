@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, Check, RotateCcw, AlertCircle, Zap, Car, ChevronLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";import { Camera, X, Check, RotateCcw, AlertCircle, Zap, Car, ChevronLeft } from "lucide-react";
 import toast from "react-hot-toast";
 import { isValidItalianPlate, formatPlate, estimateCarYearFromPlate } from "@/lib/utils";
 import Link from "next/link";
@@ -222,49 +221,47 @@ export default function ScanPage() {
         {/* STEP: Plate input */}
         {step === "plate-input" && (
           <motion.div key="plate-input" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            className="flex-1 flex flex-col min-h-0 overflow-y-auto px-4 py-4 gap-4">
+            className="flex-1 flex flex-col min-h-0 px-4 py-3 gap-3 overflow-hidden">
 
-            {/* Thumbnail — smaller to save space */}
+            {/* Thumbnail — very small strip */}
             {capturedPhoto && (
-              <div className="relative h-24 rounded-2xl overflow-hidden bg-slate-800 flex-shrink-0">
+              <div className="relative h-16 rounded-xl overflow-hidden bg-slate-800 flex-shrink-0">
                 <img src={capturedPhoto} alt="Photo" className="w-full h-full object-cover" />
                 <button onClick={reset}
-                  className="absolute top-2 right-2 w-7 h-7 bg-slate-900/80 rounded-full flex items-center justify-center">
-                  <X className="w-3.5 h-3.5 text-slate-300" />
+                  className="absolute top-1.5 right-1.5 w-6 h-6 bg-slate-900/80 rounded-full flex items-center justify-center">
+                  <X className="w-3 h-3 text-slate-300" />
                 </button>
               </div>
             )}
 
             {/* Plate input */}
-            <div className="space-y-2 flex-shrink-0">
-              <label className="text-sm font-medium text-slate-300">{t.scan.plateLabel}</label>
+            <div className="space-y-1.5 flex-shrink-0">
+              <label className="text-xs font-medium text-slate-400">{t.scan.plateLabel}</label>
               <input
                 type="text"
                 value={plateNumber}
                 onChange={(e) => setPlateNumber(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
                 placeholder="AB123CD"
-                className="input-field font-mono text-xl text-center tracking-widest uppercase"
+                className="input-field font-mono text-2xl text-center tracking-widest uppercase py-2"
                 maxLength={7}
                 autoFocus
                 autoCapitalize="characters"
               />
 
-              <AnimatePresence>
-                {estimatedYear && (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                    className="flex items-center gap-2 px-3 py-2 bg-brand-500/10 rounded-xl border border-brand-500/20">
-                    <Car className="w-4 h-4 text-brand-400 flex-shrink-0" />
-                    <p className="text-sm text-brand-300">
-                      {t.scan.estimatedYear} <span className="font-bold">{estimatedYear}</span>
-                    </p>
-                    {estimatedYear < 1980 && (
-                      <span className="ml-auto text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
-                        {t.scan.vintage}
-                      </span>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Year estimate — inline, no height jump */}
+              {estimatedYear && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-500/10 rounded-lg border border-brand-500/20">
+                  <Car className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
+                  <p className="text-xs text-brand-300">
+                    {t.scan.estimatedYear} <span className="font-bold">{estimatedYear}</span>
+                  </p>
+                  {estimatedYear < 1980 && (
+                    <span className="ml-auto text-xs bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded-full">
+                      {t.scan.vintage}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {plateNumber.length >= 7 && !isValidItalianPlate(plateNumber) && (
                 <p className="text-xs text-red-400 flex items-center gap-1">
@@ -273,17 +270,18 @@ export default function ScanPage() {
               )}
             </div>
 
-            {/* Notes — shorter textarea */}
-            <div className="space-y-2 flex-shrink-0">
-              <label className="text-sm font-medium text-slate-300">
+            {/* Notes — single line input instead of textarea */}
+            <div className="space-y-1.5 flex-shrink-0">
+              <label className="text-xs font-medium text-slate-400">
                 {t.scan.notesLabel}{" "}
-                <span className="text-slate-500 font-normal">{t.scan.notesOptional}</span>
+                <span className="text-slate-600 font-normal">{t.scan.notesOptional}</span>
               </label>
-              <textarea
+              <input
+                type="text"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder={t.scan.notesPlaceholder}
-                className="input-field resize-none h-16 text-sm"
+                className="input-field text-sm py-2.5"
                 maxLength={200}
               />
             </div>
@@ -291,7 +289,7 @@ export default function ScanPage() {
             <button
               onClick={handleSubmit}
               disabled={!isValidItalianPlate(plateNumber) || !capturedPhoto}
-              className="btn-primary w-full flex-shrink-0"
+              className="btn-primary w-full flex-shrink-0 py-3"
             >
               <Zap className="w-4 h-4" />{t.scan.submitButton}
             </button>
